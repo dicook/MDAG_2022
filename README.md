@@ -6,6 +6,4 @@ Presenter: Di Cook
 
 Website: [https://dicook.github.io/MDAG_2022/](https://dicook.github.io/MDAG_2022/)
 
-Download a [zip file of all of the materials](https://dicook.github.io/MDAG_2022/MDAG_2022.zip)
-
-Follow along with the slides [here](https://dicook.github.io/MDAG_2022/slides.html)
+Follow along with the slides [here](https://dicook.github.io/MDAG_2022/slides1.html)
