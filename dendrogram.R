@@ -75,26 +75,10 @@ rescale01 <- function(x) {
   (x - rng[1]) / (rng[2] - rng[1])
 }
 
-# Cluster in different ways: flea
-library(tourr)
-data(flea)
-scale2 <- function(x, na.rm = FALSE) (x - mean(x, na.rm = na.rm)) / sd(x, na.rm)
-flea_std <- flea %>% mutate_if(is.numeric, list(scale2))
-
-df_dist <- dist(flea_std[,2:7])
-df_hc1 <- hclust(df_dist, method="single")
-df_hc2 <- hclust(df_dist, method="complete")
-df_hc3 <- hclust(df_dist, method="average")
-df_hc4 <- hclust(df_dist, method="centroid")
-df_hc5 <- hclust(df_dist, method="ward.D2")
-p1 <- ggdendrogram(df_hc1, rotate = TRUE, size = 4) + ggtitle("single")
-p2 <- ggdendrogram(df_hc2, rotate = TRUE, size = 4) + ggtitle("complete")
-p3 <- ggdendrogram(df_hc3, rotate = TRUE, size = 4) + ggtitle("average")
-p4 <- ggdendrogram(df_hc4, rotate = TRUE, size = 4) + ggtitle("centroid")
-p5 <- ggdendrogram(df_hc5, rotate = TRUE, size = 4) + ggtitle("wards")
-p1 + p2 + p3 + p4 + p5 + plot_layout(ncol=3)
-
 # Cluster in different ways: penguins
+library(tourr)
+scale2 <- function(x, na.rm = FALSE) (x - mean(x, na.rm = na.rm)) / sd(x, na.rm)
+
 library(palmerpenguins)
 penguins <- penguins %>%
   na.omit() # 11 observations out of 344 removed
@@ -118,16 +102,12 @@ p_hc4 <- hclust(p_dist, method="centroid")
 p_hc5 <- hclust(p_dist, method="ward.D2")
 
 # Make the dendrogram in p-D. Need to add nodes, and edges
-flea_clw <- flea %>% mutate(cl = factor(cutree(df_hc5, 3)))
-flea_cla <- flea %>% mutate(cl = factor(cutree(df_hc3, 3)))
-flea_w_hfly <- hierfly(flea_clw, df_hc5)
-flea_a_hfly <- hierfly(flea_cla, df_hc3)
-
-# penguins
 p_clw <- penguins_cl %>% mutate(cl = factor(cutree(p_hc5, 3)))
 p_cla <- penguins_cl %>% mutate(cl = factor(cutree(p_hc3, 3)))
+p_cls <- penguins_cl %>% mutate(cl = factor(cutree(p_hc1, 3)))
 p_w_hfly <- hierfly(p_clw, p_hc5, scale=FALSE)
 p_a_hfly <- hierfly(p_cla, p_hc3, scale=FALSE)
+p_s_hfly <- hierfly(p_cls, p_hc1, scale=FALSE)
 
 # Build it all
 library(RColorBrewer)
@@ -137,9 +117,11 @@ library(htmltools)
 pal <- brewer.pal(length(unique(p_w_hfly$data$cl)), "Dark2")
 colw <- pal[p_w_hfly$data$cl]
 cola <- pal[p_a_hfly$data$cl]
+cols <- pal[p_s_hfly$data$cl]
 glyphs <- c(16, 46)
 pchw <- glyphs[p_w_hfly$data$node+1]
 pcha <- glyphs[p_a_hfly$data$node+1]
+pchs <- glyphs[p_s_hfly$data$node+1]
 
 # You can run it interactively with
 animate_xy(p_w_hfly$data[,1:4], 
@@ -150,8 +132,13 @@ animate_xy(p_a_hfly$data[,1:4],
            col=cola, 
            edges=p_a_hfly$edges, 
            axes="bottomleft")
+animate_xy(p_s_hfly$data[,1:4], 
+           col=cols, 
+           edges=p_s_hfly$edges, 
+           axes="bottomleft")
 
 # Use plotly to make animation for including in slides
+# Compare Wards and single
 bases <- save_history(p_w_hfly$data[, 1:4], max = 10)
 tour_path <- interpolate(bases, 0.1)
 d <- dim(tour_path)
@@ -165,10 +152,10 @@ for (i in 1:d[3]) {
   colnames(d1) <- c("x", "y")
   d1 <- apply(d1, 2, function(x) x-mean(x))
   hcw <- rbind(hcw, cbind(d1, p_w_hfly$data$cl, p_w_hfly$data$node,                           rep(i+10, nrow(d1)))) # Add 10 bc plotly can't count single digits
-  d2 <- as.matrix(p_a_hfly$data[,1:4]) %*% matrix(tour_path[,,i], ncol=2)
+  d2 <- as.matrix(p_s_hfly$data[,1:4]) %*% matrix(tour_path[,,i], ncol=2)
   colnames(d2) <- c("x", "y")
   d2 <- apply(d2, 2, function(x) x-mean(x))
-  hca <- rbind(hca, cbind(d2, p_a_hfly$data$cl, p_a_hfly$data$node,                           rep(i+10, nrow(d2))))
+  hca <- rbind(hca, cbind(d2, p_s_hfly$data$cl, p_s_hfly$data$node,                           rep(i+10, nrow(d2))))
   e1 <- cbind(d1[p_w_hfly$edges[,1],1],
               d1[p_w_hfly$edges[,2],1],
               d1[p_w_hfly$edges[,1],2],
@@ -177,12 +164,12 @@ for (i in 1:d[3]) {
               rep(i+10, nrow(p_w_hfly$edges)))
   colnames(e1) <- c("x", "xend", "y", "yend", "cl", "indx")
   hcwe <- rbind(hcwe, e1)
-  e2 <- cbind(d2[p_a_hfly$edges[,1],1],
-              d2[p_a_hfly$edges[,2],1],
-              d2[p_a_hfly$edges[,1],2],
-              d2[p_a_hfly$edges[,2],2],
-              p_a_hfly$data$cl[p_a_hfly$edges[,1]],
-              rep(i+10, nrow(p_a_hfly$edges)))
+  e2 <- cbind(d2[p_s_hfly$edges[,1],1],
+              d2[p_s_hfly$edges[,2],1],
+              d2[p_s_hfly$edges[,1],2],
+              d2[p_s_hfly$edges[,2],2],
+              p_s_hfly$data$cl[p_s_hfly$edges[,1]],
+              rep(i+10, nrow(p_s_hfly$edges)))
   colnames(e2) <- c("x", "xend", "y", "yend", "cl", "indx")
   hcae <- rbind(hcae, e2)
 }
@@ -210,7 +197,7 @@ p <- ggplot() +
   scale_color_brewer("", palette="Dark2")
 pg <- ggplotly(p, width=450, height=450) %>% animation_opts(200, redraw = FALSE, easing = "linear", transition=0)
 save_html(pg, file="penguins_cl_ward.html")
-# Average
+# Single
 p <- ggplot() +
   geom_segment(data = hcae, aes(x=x, xend=xend, y=y, yend=yend, frame = indx, colour=cl)) +
   geom_point(data = hca, aes(x = x, y = y, frame = indx, colour=cl, shape=node), size=1) +
@@ -220,4 +207,4 @@ p <- ggplot() +
   theme(legend.position="none") +
   scale_color_brewer("", palette="Dark2")
 pg <- ggplotly(p, width=450, height=450) %>% animation_opts(200, redraw = FALSE, easing = "linear", transition=0)
-save_html(pg, file="penguins_cl_average.html")
+save_html(pg, file="penguins_cl_single.html")

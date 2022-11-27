@@ -1,0 +1,341 @@
+---
+title: "Visual methods for multivariate data - a journey beyond 3D"
+author: "Session 2 <br><br> Professor Di Cook <br> Monash University <br><br>  @visnut@aus.social"
+format: 
+  revealjs:
+    multiplex: true
+    footer: "[https://github.com/dicook/MDAG_2022](https://github.com/dicook/MDAG_2022)"
+    theme: ["serif", "mystyle.scss"]
+    slide-number: c/t
+    incremental: false
+    title-slide-attributes:
+      data-background-image: img/title_bg.png
+      data-background-size: 90%  
+      data-background-position: 30% 45%  
+---
+
+```{r setup}
+#| include: false
+
+library(knitr)
+options(htmltools.dir.version = FALSE, tibble.width = 45)
+opts_chunk$set(
+  echo = FALSE, 
+  warning = FALSE, 
+  message = FALSE, 
+  error=FALSE, 
+  comment = "#>",
+  fig.align = 'center', 
+  fig.width = 5, 
+  fig.height = 5, 
+  fig.show = 'hold', 
+  fig.retina = 5,
+  cache = FALSE
+)
+
+# Printing
+options(digits=2, width=120)
+
+# libraries
+library(tidyverse)
+library(ggthemes)
+
+# for fonts
+library(showtext)
+font_add_google("Noto Sans", "Noto Sans")
+showtext_auto()
+theme_set(theme_minimal(base_family = "Noto Sans") +
+  theme(axis.line = element_line(colour = "black", size=0.2),
+        panel.border = element_rect(
+          colour = "black", fill = NA, size=0.5)))
+# Set colour palette to brewer::Dark2
+```
+
+## Outline
+
+::: {.column width="45%"}
+- <strong style="color: #aec7b2"> Session 1: Introduction to tours </strong>
+  - Getting started: package installs
+  - What is a tour?
+  - Interpreting what you see
+  - Different types of tours
+  - Interpreting what you see
+  - Creating your own tour display
+  - Saving your tour plot
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column width="45%"}
+
+- <strong style="color: #aec7b2"> Session 2: Combining tours with models </strong>
+  - Model in the data space philosophy
+  - Comparison to non-linear dimension reduction: liminal
+  - Utilising random forest diagnostics 
+  - Dendrograms in the data space
+:::
+
+## Model in the data space
+
+::: {.column width="45%"}
+
+This is the model plotted on the data: "model in the data space".
+
+```{r}
+set.seed(2022)
+d <- tibble(x = (runif(300)-0.5)*4, 
+            y = 0.1*(x-0.5)^2 -0.5*(x+1)^3 + 
+              0.1*(x-1)^4 + rnorm(300)*2)
+ggplot(d, aes(x=x, y=y)) + geom_point() +
+  geom_smooth(se=FALSE, colour="orange", size=2)
+```
+
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column width="45%"}
+
+```{r runthis5}
+library(tidyverse)
+library(palmerpenguins)
+penguins <- penguins %>% filter(!is.na(bill_length_mm)) 
+penguins_sub <- penguins[,c(1, 3:6)] %>% 
+  mutate(across(where(is.numeric),  ~ scale(.)[,1])) %>%
+  rename(bl = bill_length_mm,
+         bd = bill_depth_mm,
+         fl = flipper_length_mm,
+         bm = body_mass_g)
+```
+
+The data is plotted in the first two principal components. This is the "data in the model" space. 
+
+```{r}
+penguins_pca <- prcomp(penguins_sub[,2:5], scale=FALSE)
+ggplot(as_tibble(penguins_pca$x), aes(x=PC1, y=PC2)) + 
+  geom_point() +
+  theme(aspect.ratio=1)
+```
+
+:::
+
+## Dimension reduction
+
+Putting the plane of PCA into the data space. Code in `pca.R`.
+
+::: {.column width="45%"}
+
+```{r echo=TRUE, eval=FALSE}
+penguins_pc_plane <- bind_rows(penguins_m,
+                               penguins_m,
+                               penguins_m,
+                               penguins_m)
+penguins_pc_plane[1,] <- penguins_pc_plane[1,]-
+  3*penguins_pca$rotation[,1]-3*penguins_pca$rotation[,2]
+penguins_pc_plane[2,] <- penguins_pc_plane[2,]-
+  3*penguins_pca$rotation[,1]+3*penguins_pca$rotation[,2]
+penguins_pc_plane[3,] <- penguins_pc_plane[3,]+
+  3*penguins_pca$rotation[,1]-3*penguins_pca$rotation[,2]
+penguins_pc_plane[4,] <- penguins_pc_plane[4,]+
+  3*penguins_pca$rotation[,1]+3*penguins_pca$rotation[,2]
+
+penguins_pc_plane <- bind_rows(penguins_pc_plane, penguins_sub[,2:5])
+penguins_pc_plane_edges <- as.matrix(data.frame(from = c(1, 1, 2, 3),
+                                  to = c(2, 3, 4, 4)))
+col <- c(rep("orange", 4), rep("black", nrow(penguins_sub)))
+lcol <- c(rep("orange", 4), rep("black", nrow(penguins_sub)))
+animate_xy(penguins_pc_plane, col=col, 
+           edges=penguins_pc_plane_edges,
+           edges.col=lcol, axes="bottomleft")
+```
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column width="45%"}
+<img src="penguins_pca_plane.gif" width="100%"> 
+:::
+
+## Nonlinear dimension reduction
+
+<iframe title="Animation linking the tSNE plot with a tour plot, of data with 6 clusters, 2 really large, 3 very small and close together, and 1 close to the three but slightly bigger. tSNE spreads them into 6 clusters, three big and three small roughly equidistant." src="https://player.vimeo.com/video/439635905" width="120%" height="600" frameborder="0" allowfullscreen></iframe>
+
+## Nonlinear dimension reduction
+
+Code in `liminal.R`.
+
+<img src="img/liminal_penguins.png" width="100%"> 
+
+## Random forest diagnostics
+
+::: {.column width="45%"}
+Code in `RF_vote_matrix.R`.
+
+Random forests fit multiple trees to bootstrap samples, and generate many useful diagnostics. 
+
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column width="45%"}
+
+- Predictive error is computed automatically on the out-of-bag cases.
+- <strong style="color: #aec7b2"> Variable importance</strong>: which variables yield better accuracy when in the model
+- <strong style="color: #aec7b2"> Vote matrix</strong>, $n\times K$: Proportion of times a case is predicted to the class $k$.
+- <strong style="color: #aec7b2"> Proximities</strong>, $n\times n$: Closeness of cases measured by how often they are in the same terminal node.
+:::
+
+## Vote matrix
+
+::: {.column width="45%"}
+```{r}
+library(randomForest)
+
+set.seed(3012)
+olive <- read_csv("http://www.ggobi.org/book/data/olive.csv") %>%
+  rename(name=`...1`)
+olive <- olive %>%
+  filter(region == 1) %>%
+  mutate(area = factor(area))
+
+olive_rf <- randomForest(area~., data=olive[,-c(1, 2, 11)], importance=TRUE, proximity=TRUE)
+
+olive_rf$votes %>% as_tibble() %>% slice(1:20)
+```
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column width="45%"}
+<br><br>
+Each row sums to 1
+
+Look rows 4 and 6. How confident would you be in the classifications of these two observations?
+:::
+
+## Clustering (1/3)
+
+```{r}
+scale2 <- function(x, na.rm = FALSE) (x - mean(x, na.rm = na.rm)) / sd(x, na.rm)
+
+library(palmerpenguins)
+penguins <- penguins %>%
+  na.omit() # 11 observations out of 344 removed
+# use only vars of interest, and standardise
+# them for easier interpretation
+penguins_cl <- penguins[,c(1, 3:6)] %>% 
+  mutate(across(where(is.numeric),  ~ scale2(.))) %>%
+  rename(bl = bill_length_mm,
+         bd = bill_depth_mm,
+         fl = flipper_length_mm,
+         bm = body_mass_g) %>%
+  select(bl, bd, fl, bm, species) %>%
+  as.data.frame()
+rownames(penguins_cl) <- paste0(penguins_cl$species,
+                                1:nrow(penguins_cl))
+
+# penguins
+p_dist <- dist(penguins_cl[,1:4])
+p_hc1 <- hclust(p_dist, method="single")
+p_hc2 <- hclust(p_dist, method="complete")
+p_hc3 <- hclust(p_dist, method="average")
+p_hc4 <- hclust(p_dist, method="centroid")
+p_hc5 <- hclust(p_dist, method="ward.D2")
+```
+
+::: {.column width="45%"}
+
+Single linkage
+
+```{r}
+library(ggdendro)
+ggdendrogram(p_hc1, rotate=TRUE)
+```
+
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column width="45%"}
+
+Wards linkage
+
+```{r}
+ggdendrogram(p_hc5, rotate=TRUE)
+```
+:::
+
+## Clustering (2/3)
+
+::: {.column width="45%"}
+
+Confusion table
+
+```{r}
+p_cl <- penguins_cl %>% 
+  mutate(cl_w = factor(cutree(p_hc5, 3)),
+         cl_s = factor(cutree(p_hc1, 3)))
+p_cl %>% count(cl_w, cl_s) %>%
+  pivot_wider(names_from=cl_s, 
+              values_from=n, 
+              values_fill=0)
+```
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column width="45%"}
+The two clustering solutions are very different. 
+
+:::
+
+## Clustering (3/3)
+
+::: {.column width="45%"}
+
+Wards linkage
+
+<iframe src="penguins_cl_ward.html" width="400" height="500" scrolling="yes" seamless="seamless" frameBorder="0"> </iframe>
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column width="45%"}
+
+Single linkage
+
+<iframe src="penguins_cl_single.html" width="400" height="500" scrolling="yes" seamless="seamless" frameBorder="0"> </iframe>
+
+:::
+
+Code in `dendrogram.R`.
+
+## Wrap up
+
+That's all for today!
+
+I hope you've found something useful to take away or some interesting ideas to pursue.
+
+To read more about these methods, start here:
+
+- [Visualizing statistical models: Removing the blindfold (2015)](https://onlinelibrary.wiley.com/doi/abs/10.1002/sam.11271)
+- [tourr: An R Package for Exploring Multivariate Data with Projections](http://github.com/ggobi/tourr)
+
+
+## Acknowledgements
+
+Slides produced using [quarto](https://quarto.org).
+
+Slides available from [https://github.com/dicook/MDAG_2022](https://github.com/dicook/MDAG_2022). 
+
+Viewable at [https://dicook.github.io/MDAG/slides.html)](https://dicook.github.io/MDAG_2022/slides.html)).
+
+

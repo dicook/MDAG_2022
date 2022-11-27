@@ -5,10 +5,8 @@ library(geozoo)
 library(RColorBrewer)
 library(randomForest)
 
-quartz() # or X11()
-
 olive <- read_csv("http://www.ggobi.org/book/data/olive.csv") %>%
-  rename(name=X1)
+  rename(name=`...1`)
 olive <- olive %>%
   filter(region == 1) %>%
   mutate(area = factor(area))

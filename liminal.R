@@ -26,7 +26,7 @@ penguins_sub <- penguins[,c(1, 3:6)] %>%
 
 set.seed(2022)
 p_tsne <- Rtsne::Rtsne(penguins_sub[,2:5])
-p_tsne_df <- data.frame(tsneX = tsne$Y[, 1], tsneY = tsne$Y[, 2])
+p_tsne_df <- data.frame(tsneX = p_tsne$Y[, 1], tsneY = p_tsne$Y[, 2])
 limn_tour_link(
   p_tsne_df,
   penguins_sub,
