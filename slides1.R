@@ -63,15 +63,14 @@ ggplot(penguins_sub,
 
 
 ## ----runthis3, echo=TRUE, eval=FALSE--------------------
-#> library(RColorBrewer)
-#> clrs <- brewer.pal(3, "Dark2")
-#> col <- clrs[
-#>   as.numeric(
-#>     penguins_sub$species)]
-#> animate_xy(penguins_sub[,2:5],
-#>            col=col,
-#>            axes="off",
-#>            fps=15)
+library(RColorBrewer)
+clrs <- brewer.pal(3, "Dark2")
+col <- clrs[
+   as.numeric(
+     penguins_sub$species)]
+ animate_xy(penguins_sub[,2:5],
+            col=col,
+            axes="off")
 
 
 ## ----eval=FALSE-----------------------------------------
@@ -257,13 +256,13 @@ ggplot(penguins_sub, aes(x=bd, y=bm, colour=species)) +
 
 
 ## ----runthis10, eval=FALSE------------------------------
-#> animate_xy(penguins_sub[,2:5], grand_tour(),
-#>            axes = "bottomleft", col=col)
-#> set.seed(2022)
-#> pp <- animate_xy(penguins_sub[,2:5],
-#>            guided_tour(lda_pp(penguins_sub$species)),
-#>            axes = "bottomleft", col=col)
-#> best_proj <- pp$basis[length(pp$basis)][[1]] # Save the final projection
+animate_xy(penguins_sub[,2:5], grand_tour(),
+            axes = "bottomleft", col=col)
+set.seed(2022)
+pp <- animate_xy(penguins_sub[,2:5],
+           guided_tour(lda_pp(penguins_sub$species)),
+           axes = "bottomleft", col=col)
+best_proj <- pp$basis[length(pp$basis)][[1]] # Save the final projection
 
 
 ## ----eval=FALSE-----------------------------------------
@@ -307,9 +306,10 @@ ggplot(penguins_sub, aes(x=bd, y=bm, colour=species)) +
 #> clrs <- brewer.pal(3, "Dark2")
 #> col <- clrs[as.numeric(penguins_sub$species)]
 #> # Check contribution of bl, change mvar to switch variables
-#> animate_xy(penguins_sub[,2:5],
-#>            radial_tour(as.matrix(best_proj), mvar = 2),
-#>            col = col)
+animate_xy(penguins_sub[,2:5],
+           radial_tour(as.matrix(best_proj), 
+                       mvar = 3),
+           col = col)
 
 
 ## ----eval=FALSE-----------------------------------------

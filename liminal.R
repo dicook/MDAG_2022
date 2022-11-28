@@ -1,3 +1,4 @@
+library(tidyverse)
 library(liminal)
 library(Rtsne)
 data(fake_trees)

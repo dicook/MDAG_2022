@@ -2,6 +2,8 @@
 library(tidyverse)
 library(palmerpenguins)
 library(RColorBrewer)
+library(plotly)
+library(htmltools)
 
 # Get data
 penguins <- penguins %>% filter(!is.na(bill_length_mm)) 

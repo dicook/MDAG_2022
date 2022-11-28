@@ -4,6 +4,7 @@ library(palmerpenguins)
 library(randomForest)
 library(MASS)
 library(RColorBrewer)
+library(tourr)
 
 # Get data
 penguins <- penguins %>% filter(!is.na(bill_length_mm)) 
@@ -33,10 +34,14 @@ penguins_grid <- penguins_grid %>%
 clbases <- save_history(penguins_sub[,2:5], max = 5)
 
 # Show forest boundaries
+library(RColorBrewer)
+clrs <- brewer.pal(3, "Dark2")
+
 rfcol <- clrs[
   as.numeric(
     penguins_grid$rf_pred)]
-animate_slice(penguins_grid[,1:4], planned_tour(clbases),
+animate_slice(penguins_grid[,1:4], 
+              planned_tour(clbases),
               col=rfcol, axes="bottomleft")
 render_gif(penguins_grid[,1:4], 
            planned_tour(clbases),
