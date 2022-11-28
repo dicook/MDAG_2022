@@ -6,6 +6,6 @@ Presenter: Di Cook
 
 Website: [https://dicook.github.io/MDAG_2022/](https://dicook.github.io/MDAG_2022/)
 
-Grab the code files and RStudio project so that you can better work along with me, from this [zip file](https::/github.com/dicook/MDAG_2022/MDAG.zip)
+Grab the code files and RStudio project so that you can better work along with me, from this [zip file](https://dicook.github.io/MDAG_2022/MDAG.zip)
 
 Follow along with the slides [here](https://dicook.github.io/MDAG_2022/slides1.html)
