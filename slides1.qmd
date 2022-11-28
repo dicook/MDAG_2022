@@ -72,6 +72,7 @@ theme_set(theme_minimal(base_family = "Noto Sans") +
 - <strong style="color: #aec7b2"> Session 2: Combining tours with models </strong>
   - Model in the data space philosophy
   - Comparison to non-linear dimension reduction: liminal
+  - Classification boundaries
   - Utilising random forest diagnostics 
   - Dendrograms in the data space
 :::
@@ -1072,7 +1073,7 @@ render_gif(penguins_sub[,2:5], grand_tour(),
 ```
 
 <br>
-Method 2, using plotly (see slide 15 "Understanding the projections" code chunk):
+Method 2, using plotly (see `create_plotly_animation.R`):
 
 
 :::

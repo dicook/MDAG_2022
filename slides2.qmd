@@ -72,6 +72,7 @@ theme_set(theme_minimal(base_family = "Noto Sans") +
 - <strong style="color: #aec7b2"> Session 2: Combining tours with models </strong>
   - Model in the data space philosophy
   - Comparison to non-linear dimension reduction: liminal
+  - Classification boundaries
   - Utilising random forest diagnostics 
   - Dendrograms in the data space
 :::
@@ -168,6 +169,47 @@ animate_xy(penguins_pc_plane, col=col,
 Code in `liminal.R`.
 
 <img src="img/liminal_penguins.png" width="100%"> 
+
+## Classification boundaries
+
+::: {.column width="45%"}
+Code in `classification.R`.
+
+- Fit models
+- Create grid of points
+- Predict grid
+- Play on the same tour path
+- Use a slice tour
+
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column width="45%"}
+
+
+:::
+
+## Classification boundaries
+
+::: {.column width="45%"}
+Random forest
+
+<img src="penguins_rf.gif" width="100%"> 
+
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column width="45%"}
+
+LDA
+
+<img src="penguins_lda.gif" width="100%"> 
+
+:::
 
 ## Random forest diagnostics
 
